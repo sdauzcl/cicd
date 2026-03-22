@@ -1,0 +1,50 @@
+# 工作流名称，在 GitHub Actions 界面中显示
+name: CI
+
+# 触发条件：何时运行此流水线
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Build
+        run: go build -o server .
+
+      # 登录 Docker Hub（需在仓库 Settings → Secrets 配置 DOCKERHUB_USERNAME 和 DOCKERHUB_TOKEN）
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 构建并推送到 Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:${{ github.sha }}
+
+  # 可选：部署到 K8s（需在仓库 Settings → Secrets 配置 KUBE_CONFIG）
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: azure/k8s-set-context@v3
+  #       with:
+  #         kubeconfig: ${{ secrets.KUBE_CONFIG }}
+  #     - run: |
+  #         kubectl set image deployment/exam-app app=${{ secrets.DOCKERHUB_USERNAME }}/exam-app:${{ github.sha }} -n default
+  #         kubectl rollout status deployment/exam-app -n default
