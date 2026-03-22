@@ -36,15 +36,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:${{ github.sha }}
 
-  # 可选：部署到 K8s（需在仓库 Settings → Secrets 配置 KUBE_CONFIG）
-  # deploy:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: azure/k8s-set-context@v3
-  #       with:
-  #         kubeconfig: ${{ secrets.KUBE_CONFIG }}
-  #     - run: |
-  #         kubectl set image deployment/exam-app app=${{ secrets.DOCKERHUB_USERNAME }}/exam-app:${{ github.sha }} -n default
-  #         kubectl rollout status deployment/exam-app -n default
+  # 部署到本机：在 Mac 上拉取镜像并运行（需先配置自托管 Runner）
+  deploy-local:
+    needs: build
+    runs-on: self-hosted  # 使用本机 Runner，见下方配置说明
+    steps:
+      - name: 拉取最新镜像并运行
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:latest
+          docker stop exam-app 2>/dev/null || true
+          docker rm exam-app 2>/dev/null || true
+          docker run -d --name exam-app -p 8080:8080 --restart unless-stopped ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:latest

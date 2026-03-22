@@ -36,6 +36,17 @@ docker-compose up -d
 - `DOCKERHUB_USERNAME`：Docker Hub 用户名
 - `DOCKERHUB_TOKEN`：Docker Hub Access Token（推荐用 [Access Token](https://hub.docker.com/settings/security) 代替密码）
 
+### 自动部署到本机（CD）
+
+推送代码后自动在本机拉取镜像并运行，需先配置 **自托管 Runner**：
+
+1. 打开仓库 **Settings** → **Actions** → **Runners** → **New self-hosted runner**
+2. 选择 **macOS**，按页面指引在终端执行命令（会下载并配置 runner）
+3. 最后执行 `./run.sh` 启动 runner（建议用 `launchd` 或 `nohup` 保持常驻）
+4. 确保本机已安装并运行 Docker
+
+配置完成后，每次 push 会先在 GitHub 构建并推送镜像，再在你的 Mac 上自动 `docker pull` 并重启容器。访问 http://localhost:8080 查看服务。
+
 ## K8s 部署
 
 ```bash
