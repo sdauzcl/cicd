@@ -37,9 +37,11 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/exam-app:${{ github.sha }}
 
   # 部署到本机：在 Mac 上拉取镜像并运行（需先配置自托管 Runner）
+  # 配置好 Runner 后，将 if: false 改为 if: true
   deploy-local:
     needs: build
-    runs-on: self-hosted  # 使用本机 Runner，见下方配置说明
+    if: true  # 暂无 Runner 时设为 false，配置好 Runner 后改为 true
+    runs-on: self-hosted
     steps:
       - name: 拉取最新镜像并运行
         run: |
